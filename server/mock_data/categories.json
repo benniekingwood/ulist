@@ -1,2 +1,1 @@
-/* This is mock category data, for now we will use this, but this data will end up coming from our MySQL db */
-{"categories":["For Sale", "Jobs", "Housing"]}
+{"category" : ["For Sale", "Jobs", "Housing"]}

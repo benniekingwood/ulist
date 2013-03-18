@@ -1,0 +1,21 @@
+[
+    {
+        "_id" : "1",
+        "name" : "Post1",
+        "description" : "This is a good post"},
+    {
+        "_id" : "2",
+        "name" : "Post2",
+        "description" : "This is a better post"
+    },
+    {
+        "_id" : "3",
+        "name" : "Post3",
+        "description" : "This is the best post"
+    },
+    {
+        "_id" : "4",
+        "name" : "Post4",
+        "description" : "The last post."
+    }
+]
