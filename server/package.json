@@ -1,9 +1,26 @@
 {
     "name": "ulist",
-    "description": "ulink classifieds.",
+    "description": "ulink college classifieds.",
     "version": "0.0.1",
     "private": true,
     "dependencies": {
         "express": "3.x"
-    }
+    },
+    "keywords": [
+        "college",
+        "classfieds",
+        "university",
+        "listings",
+        "school"
+    ],
+    "author": {
+        "name": "Bennie Kingwood",
+        "email": "bennie.kingwood@theulink.com"
+    },
+    "contributors": [
+        {
+            "name": "Bennie Kingwood",
+            "email": "bennie.kingwood@theulink.com"
+        }
+    ]
 }
