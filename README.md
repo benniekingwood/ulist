@@ -45,6 +45,11 @@ ULink Users<br />
 -have to be authenticated and a user of the school to post to the school<br />
 -when a user submits a post, they need to do some sort of new age security<br />
 -all the user's posts will show up in their account, in which they can edit them  <br />
+
+
+-(From Ben Clark 03.24.13)- we need a rating/feedback system in which ulink users can rate other uLink users who post (Need to think out more later)
+
+
 <br />
 Employers<br />
 -need to be able to post jobs to the school<br />
