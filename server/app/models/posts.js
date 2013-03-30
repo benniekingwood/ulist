@@ -7,29 +7,32 @@
  *
  * Post JSON
  * {
- *  "_id": "1323",
- *  "user_id": 34,
- *  "school_id": 3,
- *  "title": "this is the post title",
- *  "description": "This is the post description",
- *  "type": "headline" or "basic",
- *  "category": "Jobs",
- *  "created": { $date: "2010-07-13 13:23UTC"},
- *  "expires": { $date: "2010-12-13 13:23UTC"},
- *  "image_urls":["url1","url2"],
- *  "email": "joe@gmail.com",
- *  "tags": ["tag1","tag2"],
- *  "location": {
- *      “latitude”: “-122.2344”
- *      “longitude”: “42.43434”
- *  },
- *  "address": {
- *      "street": "3543 big drive",
- *      "zip": "45445",
- *  },
- *  "meta": ["bold" , "listing pic"]
- *  "flag": "spam" or "prohibited" or "miscategorized"
- * }
+    "user_id": 34,
+    "school_id": 3,
+    "title": "this is the post title",
+    "description": "This is the post description",
+    "type": "headline",
+    "category": "Jobs",
+    "email": "joe@gmail.com",
+ "address": [
+ {
+     "street": "3543 big drive",
+     "zip": "45445"
+ }
+ ],
+ "image_urls": [
+ "url1",
+ "url2"
+ ],
+ "tags": [
+ "tag1",
+ "tag2"
+ ],
+ "meta": [
+ "bold",
+ "listing pic"
+ ]
+ }
  ********************************************************************************/
 var env = process.env.NODE_ENV || 'development'
     ,config = require('../../config/config')[env],
@@ -100,10 +103,26 @@ exports.findAll = function(req, res) {
     // TODO: all by user_id
     // TODO: by category_id and school_id
     db.posts.find({}, function(err, posts) {
-        if ( err || !posts) res.send("No posts returned.");
+        if ( err ) {
+            if(!res) {
+                req.io.respond( {error : "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+            } else {
+                res.send({error : "There was an issue with your request." }, response.SYSTEM_ERROR.code);
+            }
+        }
+        else if(!posts ) {
+            if(!res) {
+                req.io.respond( {posts : new Array() } , response.SUCCESS.code);
+            } else {
+                res.send({posts : new Array()  }, response.SUCCESS.code);
+            }
+        }
         else {
-            response.SUCCESS.response = posts;
-            res.send(response.SUCCESS);
+            if(!res) {
+                req.io.respond( {posts : posts } , response.SUCCESS.code);
+            } else {
+                res.send({posts : posts }, response.SUCCESS.code);
+            }
         }
     });
 };
@@ -116,10 +135,26 @@ exports.findAll = function(req, res) {
  */
 exports.findById = function(req, res) {
     db.posts.find({ _id: ObjectId(req.params.id) }, function(err, post) {
-        if ( err || !post) res.send("No posts returned.");
+          if ( err ) {
+            if(!res) {
+                req.io.respond( {error : "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+            } else {
+                res.send({error :  "There was an issue with your request." }, response.SYSTEM_ERROR.code);
+            }
+        }
+        else if(!post ) {
+            if(!res) {
+                req.io.respond( {post : new Array() } , response.SUCCESS.code);
+            } else {
+                res.send({post : new Array()  }, response.SUCCESS.code);
+            }
+        }
         else {
-            response.SUCCESS.response = post;
-            res.send(response.SUCCESS);
+            if(!res) {
+                req.io.respond( {post : post } , response.SUCCESS.code);
+            } else {
+                res.send({post : post }, response.SUCCESS.code);
+            }
         }
     });
 };
@@ -132,19 +167,36 @@ exports.findById = function(req, res) {
 exports.createPost = function(req, res) {
     var post = req.body;
     // validate post
-    var failed = validate(post, "POST");
+   // var failed = validate(post, "POST");
+    var failed = false;
     if(!failed) {
-        db.posts.save(post, function(err, saved) {
-            if( err ) {
-                // TODO: need to log this error to file
-                res.send(response.POST_SAVE_ERROR)
-            } else if (!saved) {
-                res.send(response.POST_SAVE_ERROR);
-            } else res.send(saved);
+        db.posts.save(post, function(err, result) {
+             if ( err ) {
+                    if(!res) {
+                        req.io.respond( { error : "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+                    } else {
+                        res.send({ error : "There was an issue with your request." }, response.SYSTEM_ERROR.code);
+                    }
+            } else if(!result ) {
+                if(!res) {
+                    req.io.respond( {error : "There was a problem creating your post.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : "There was a problem creating your post.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                }
+            } else {
+                if(!res) {
+                    req.io.respond( {post : result } , response.SUCCESS.code);
+                } else {
+                    res.send({post : result }, response.SUCCESS.code);
+                }
+            }
         });
     } else {
-        response.POST_VALIDATION_ERROR.errors = failed;
-        res.send(response.POST_VALIDATION_ERROR);
+        if(!res) {
+            req.io.respond( {error : "Validation error" } , response.VALIDATION_ERROR.code);
+        } else {
+            res.send({error : "Validation error" }, response.VALIDATION_ERROR.code);
+        }
     }
 };
 
@@ -155,22 +207,38 @@ exports.createPost = function(req, res) {
  */
 exports.updatePost = function(req, res) {
     var post = req.body;
-    var failed = validate(post, "PUT");
+    delete post._id;
+   // var failed = validate(post, "PUT");
+    var failed = false;
     if(!failed) {
-        db.posts.update({_id: ObjectId(post.id) }, {$set: {title: post.title, description:post.description}}, function(err, updated) {
-            if( err ) {
-                // TODO: need to log this error to file
-                res.send(response.POST_UPDATE_ERROR)
-            } else if (!updated) {
-                res.send(response.POST_UPDATE_ERROR);
+        db.posts.update({_id: ObjectId(req.params.id)}, post, function(err, result) {
+            if ( err ) {
+                    // TODO: add codes here so we know what went wrong, log errors
+                    if(!res) {
+                        req.io.respond( {error : "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+                    } else {
+                        res.send({error : "There was an issue with your request."  }, response.SYSTEM_ERROR.code);
+                    }
+            } else if(!result ) {
+                if(!res) {
+                    req.io.respond( {error : "There was a problem updating your post.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : "There was a problem updating your post.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                }
             } else {
-                response.SUCCESS.response = post;
-                res.send(response.SUCCESS);
+                if(!res) {
+                    req.io.respond( {post : result } , response.SUCCESS.code);
+                } else {
+                    res.send({post : result }, response.SUCCESS.code);
+                }
             }
         });
     } else {
-        response.POST_VALIDATION_ERROR.errors = failed;
-        res.send(response.POST_VALIDATION_ERROR);
+        if(!res) {
+            req.io.respond( {error : "Validation error" } , response.VALIDATION_ERROR.code);
+        } else {
+            res.send({error : "Validation error" }, response.VALIDATION_ERROR.code);
+        }
     }
 };
 
@@ -182,22 +250,37 @@ exports.updatePost = function(req, res) {
  */
 exports.deletePost = function(req, res) {
     var post = req.params;
-    var failed = validate(post, "DELETE");
+    //var failed = validate(post, "DELETE");
+    var failed = false;
     if(!failed) {
-        db.posts.remove({_id: ObjectId(post.id) },{safe:true}, function(err, deleted) {
-            if( err ) {
-                // TODO: need to log this error to file
-                res.send(response.POST_DELETE_ERROR)
-            } else if (!deleted) {
-                res.send(response.POST_DELETE_ERROR);
+        db.posts.remove({_id: ObjectId(post.id) },{safe:true}, function(err, result) {
+            if ( err ) {
+                if(!res) {
+                    req.io.respond( {error:  "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error :  "There was an issue with your request." }, response.SYSTEM_ERROR.code);
+                }
+            }
+            else if(!result ) {
+                if(!res) {
+                    req.io.respond( {error : "There was a problem deleting your post.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : "There was a problem deleting your post.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                }
             }
             else {
-                response.SUCCESS.response = "Post deleted";
-                res.send(response.SUCCESS);
+                if(!res) {
+                    req.io.respond( {post : "Post deleted." } , response.SUCCESS.code);
+                } else {
+                    res.send({post : "Post deleted." }, response.SUCCESS.code);
+                }
             }
         });
     } else {
-        response.POST_VALIDATION_ERROR.errors = failed;
-        res.send(response.POST_VALIDATION_ERROR);
+         if(!res) {
+            req.io.respond( {error : "An id is required to delete a post." } , response.VALIDATION_ERROR.code);
+        } else {
+            res.send({error : "An id is required to delete a post." }, response.VALIDATION_ERROR.code);
+        }
     }
 };

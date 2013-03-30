@@ -1,21 +1,27 @@
-[
-    {
-        "_id" : "1",
-        "name" : "Post1",
-        "description" : "This is a good post"},
-    {
-        "_id" : "2",
-        "name" : "Post2",
-        "description" : "This is a better post"
-    },
-    {
-        "_id" : "3",
-        "name" : "Post3",
-        "description" : "This is the best post"
-    },
-    {
-        "_id" : "4",
-        "name" : "Post4",
-        "description" : "The last post."
-    }
-]
+{
+    "user_id": 34,
+    "school_id": 3,
+    "title": "this is the post title",
+    "description": "This is the post description",
+    "type": "headline",
+    "category": "Jobs",
+    "email": "joe@gmail.com",
+    "address": [
+        {
+            "street": "3543 big drive",
+            "zip": "45445"
+        }
+    ],
+    "image_urls": [
+        "url1",
+        "url2"
+    ],
+    "tags": [
+        "tag1",
+        "tag2"
+    ],
+    "meta": [
+        "bold",
+        "listing pic"
+    ]
+}

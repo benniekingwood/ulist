@@ -4,33 +4,22 @@
  * Created On: 3/17/13
  * Description: This file will function as the name server for the ulist node API
  ********************************************************************************/
-var express = require('express'),
-    fs = require('fs'),
-    path = require('path'),
-    response = require('./response'),
-    env = process.env.NODE_ENV || 'development',
-    config = require('./config/config')[env];
-
-// Bootstrap models
-/*var models_path = __dirname + '/app/models'
-fs.readdirSync(models_path).forEach(function (file) {
-    require(models_path+'/'+file)
-})*/
-
-var app = express();
+var path = require('path')
+express = require('express.io')
+app = express().http().io()
 
 app.configure(function () {
+    app.set('port', process.env.PORT || 3737);
     app.use(express.logger('dev'));
     app.use(express.bodyParser());
-    app.use(express.static(path.join(__dirname, "public")));
-    app.use(express.static(path.join(__dirname, "files")));
+    app.use(express.static(__dirname + '/public'));
     app.use(app.router);
+    app.use(express.bodyParser({ keepExtensions: true, uploadDir: '/tmp/files' }));
 });
 
 // development environment settings
 app.configure('development', function(){
     app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-
 });
 // production environment settings
 app.configure('production', function(){
@@ -39,7 +28,7 @@ app.configure('production', function(){
 // Bootstrap routes
 require('./config/routes')(app)
 
+console.log('node server running on port ' + app.get('port'));
+
 // Start the app by listening on <port>
-var port = process.env.PORT || 3737
-app.listen(port)
-console.log('uList Server API app started on port '+port)
+app.listen(app.get('port'));
