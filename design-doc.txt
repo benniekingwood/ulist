@@ -1,0 +1,67 @@
+Design Document Layout (Template)
+
+Description: uList
+	- What is uList?
+	- Target audience
+	- What is the intended purpose
+
+Actors
+	- Who will be involved in the uList process?
+
+Models
+	- Listing
+	- User
+	- Map (generic map data? not too sure about this...)
+	- Photo (uList photos)
+
+
+Listing (object)
+ : title (string)
+ : short-description (string)
+ : long-description (string)
+ : category (enum? persistent table data?)
+ : reply-to email address (string)
+ : location (string, coordinates?)
+ : photos (list<byte>, list<url>)
+ : keywords (list<string>)
+ : price field (validated monetary field)
+
+ User (object)
+ : uLink user
+
+ Photo (object)
+ : id (alpha numeric string)
+ : photo url (string)
+ : description (string)
+
+
+Map (object)
+: ummmmmm.....? coordinates (location)
+
+- NOTE: if user does not enter in keywords field, we could auto-parse the title for them and nix any of the simple words (4 letters, or less)
+
+Views/Controllers
+	- Descriptions of each view
+	- Sketch/GUI version of view
+	- Actions for each view
+	- Methods for each view
+
+
+Views:
+
+: My Accont Listings Default (My Account page - modify view)
+: My Account View Listings (display user listings)
+: uList Default View
+	- uList Category side menu
+	- uList Search search field
+	- uList Map pulldown/dropdown
+: uList "View By Category"/"Search Listings Results"
+: uList Listing Details View
+: uList Listing Wizard:
+	- Create Listing
+	- Edit Listing
+
+
+APIs/Frameworks:
+	- Description of each API/Framework used
+	- How does it tie into the implementation?	

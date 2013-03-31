@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+	<title>Test Ember.js App</title>
+	<link rel="stylesheet" href="css/ember-normalize.css">
+	<link rel="stylesheet" href="css/ember-style.css">
+</head>
+<body>
+
+	<h1>Test - uList - Ember.js</h1>
+
+	<!--
+	<script type="text/x-handlebars">
+		<ul>
+			{{#each ULIST.listingsController}}
+			  <li>
+			  	<div class="background"><img src="img/vt-football-bg.jpg" /></div>
+    			<div class="content">{{user_name}}: <b>{{title}}</b> {{short_description}} - <i>{{category}}</i></div>	  	
+			  </li>
+			{{/each}}
+		</ul>
+	</script>
+	-->
+
+	<!--
+	living social style thumbnails
+	<ul>
+		<li class='ls-item deal'>
+			<a>
+				<div class='hd'>
+					<p class='category'>
+						<span>Some Header Title</span>
+					</p>
+					<img src="...."/>
+					<div class="meta">
+						<span class='deal-location'>Some location (national, blacksburg, etc.)</span>
+					</div>
+				</div
+				<div class="bd">
+					<h1>Title</h1>
+					<h2>Sub-Title</h2>
+					<p class='meta'>
+						<span class='price'><span>
+						<span class='btn' href="...">>></span>
+					</p>
+				</div>
+			</a>
+		</li>
+	</ul>
+	-->
+
+	<script type="text/x-handlebars">
+		<ul class="unstyled cities-items">
+			{{#each ULIST.listingsController}}
+			  <li class="ls-item deal">
+			  	<a href="javascript:void 0;">
+			  		<div class="hd">
+			  			<p class="category">
+			  				<span>highlight - {{user_name}}</span>
+			  			</p>
+			  			<img src="img/vt-football-bg.jpg" />
+			  			<div class="meta">
+			  				<span class="deal-location"><i>Blacksburg, VA</i></span>
+			  			</div>
+			  		</div>
+			  		<div class="bd">
+			  			<h1>{{title}}</h1>
+			  			<h2>{{short_description}}</h2>
+			  			<p class="meta">
+			  				<span class="price">$55</span>
+			  			</p>
+			  		</div>
+			  	</a>	  	
+			  </li>
+			{{/each}}
+		</ul>
+	</script>
+
+	<!--
+	<script type="text/x-handlebars">
+		{{#view Ember.Button target="ULIST.listingsController" action="loadListings"}}
+			Load Listings
+		{{/view}}
+
+		{{#collection contentBinding="ULIST.listingsController" tagName="ul"}}
+			<b>{{content.title}}</b> - {{content.short_description}}, <i>{{content.category}}</i>
+		{{/collection}}
+	</script>
+	-->
+
+	<script src="app/lib/js/jquery-1.9.1.js"></script>	
+	<script src="app/lib/js/handlebars-1.0.0-rc.3.js"></script>
+	<script src="app/lib/js/ember-1.0.0-rc.1.js"></script>
+	<!--<script src="app/lib/js/ember-data.min.js"></script>-->	
+	<script src="app/app.js"></script>
+	<script src="app/models/models.js"></script>
+	<!--<script src="app/data/data.js"></script>-->
+	<script src="app/controllers/controllers.js"></script>	
+</body>
+</html>
