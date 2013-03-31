@@ -1,0 +1,203 @@
+/* Put your CSS here */
+html, body {
+    margin: 20px;
+}
+
+.background {
+    z-index: -1; /* put it under everything*/
+    position: fixed; /* make it stay in the same place, regardless of scrolling */
+    top: 0;
+    left: 0;
+    overflow: hidden; /* clip the image */
+    width: 100%; /* fill the full width of browser */
+    min-height: 950px; /* show at least this much of the image */
+    border-radius: 4px;
+}
+
+.background img {
+    width: 100%;
+}
+
+.content {
+	bottom: 0;
+	left: 0;
+	float: left;
+	background-position: ;
+}
+
+/* Living Social style */
+
+ul {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	font-weight: normal;
+	font-style: normal;
+	line-height: 1;
+}
+
+ul.unstyled {
+	margin-left: 0;
+	list-style: none;
+}
+
+ul.cities-items {
+	margin: 0 -8px;
+}
+
+.cities-items {
+	margin: 0 -8px;
+	padding: 0;
+}
+
+a {
+	color: #0088cc;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.ls-item {
+	margin-right: 12px;
+	margin-bottom: 20px;
+	position: relative;
+	display: -moz-inline-box;
+	-moz-box-orient: vertical;
+	display: inline-block;
+	vertical-align: baseline;
+	zoom: 1;
+	vertical-align: top;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	-ms-border-radius: 4px;
+	-o-border-radius: 4px;
+	border-radius: 4px;
+	background: none;
+}
+
+/*media="screen"*/
+.ls-item .hd {   /* this is top part of thumbnail "hd" */
+	position: relative;
+	height: 314px;
+}
+
+/*media="screen"*/
+.ls-item.most_shared .hd .category {
+	background-color: #508395;
+}
+
+/*www.livingsocial.commedia="screen"*/
+.ls-item .hd .category {
+	padding: 10px 0;
+	text-align: center;
+	font-size: 14px;
+	width: 100%;
+	height: 20px;
+	color: #fff;
+	-webkit-box-shadow: 0 0 1px 0 rgba(0,0,0,0.65);
+	-moz-box-shadow: 0 0 1px 0 rgba(0,0,0,0.65);
+	-ms-box-shadow: 0 0 1px 0 rgba(0,0,0,0.65);
+	-o-box-shadow: 0 0 1px 0 rgba(0,0,0,0.65);
+	box-shadow: 0 0 1px 0 rgba(0,0,0,0.65);
+	position: absolute;
+	top: -14px;
+	left: 0;
+	font-family: "arial rounded mt bold",helvetica,arial,sans-serif;
+	text-transform: lowercase;
+	-webkit-border-radius: 4px 4px 0 0;
+	-moz-border-radius: 4px 4px 0 0;
+	-ms-border-radius: 4px 4px 0 0;
+	-o-border-radius: 4px 4px 0 0;
+	border-radius: 4px 4px 0 0;
+	background-color: #508395;
+}
+
+.ls-item .hd img {
+	width: 250px;
+	height: 314px;
+	-webkit-border-radius: 4px 4px 0 0;
+	-moz-border-radius: 4px 4px 0 0;
+	-ms-border-radius: 4px 4px 0 0;
+	-o-border-radius: 4px 4px 0 0;
+	border-radius: 4px 4px 0 0;
+}
+
+.ls-item .hd .meta {
+	font-size: 11px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	background-color: #000;
+	background-color: rgba(0,0,0,0.7);
+	font-family: "arial rounded mt bold",helvetica,arial,sans-serif;
+	text-transform: lowercase;
+}
+
+.ls-item .hd .deal-location {
+	padding: 7px 10px;
+	color: #d1d1d1;
+	display: -moz-inline-box;
+	-moz-box-orient: vertical;
+	display: inline-block;
+	vertical-align: baseline;
+	zoom: 1;
+}
+
+
+.ls-item .bd {
+	padding: 5px 10px 10px 10px;
+	background-color: #262626;
+	position: relative;
+	-webkit-border-radius: 0 0 4px 4px;
+	-moz-border-radius: 0 0 4px 4px;
+	-ms-border-radius: 0 0 4px 4px;
+	-o-border-radius: 0 0 4px 4px;
+	border-radius: 0 0 4px 4px;
+	position: relative;
+	max-width: 230px;
+}
+
+.ls-item.deal .bd {
+	padding: 10px 10px 65px;
+	height: 40px;
+}
+
+.ls-item .bd h1 {
+	color: #fff;
+	font-size: 14px;
+	line-height: 20px;
+	margin-bottom: 3px;
+	white-space: pre-wrap; /* css-3 */    
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */    
+    white-space: -o-pre-wrap; /* Opera 7 */    
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+.ls-item .bd h2 {
+	color: #909090;
+	font-size: 11px;
+	line-height: 15px;
+	white-space: pre-wrap; /* css-3 */    
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */    
+    white-space: -o-pre-wrap; /* Opera 7 */    
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+.ls-item .bd .meta {
+	margin: 0 39px 0 0;
+	text-align: right;
+	font-family: "arial rounded mt bold",helvetica,arial,sans-serif;
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+.ls-item.most_shared .hd .category span {
+	padding-left: 22px;
+	background-position: 0 -140px;
+}
+
