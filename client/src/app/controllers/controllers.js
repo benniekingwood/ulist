@@ -4,7 +4,7 @@
  */
 
 /* This will keep track of listing items displayed on webpage/app */
- ULIST.listingsController = Ember.ArrayController.create({
+ ULIST.listingsController = Ember.ArrayController.extend({
  	content: [],
  	selected: null,
 

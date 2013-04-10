@@ -30,7 +30,7 @@ ULIST.Book = Ember.Object.extend({
  	email: DS.attr('string'), // this may be the same thing as reply to 
  	location: DS.belongsTo('ULIST.Location'),
  	keywords: DS.hasMany('ULIST.Keyword'), // list of keywords ',' delineated? 
- 	photos: DS.hasMany('ULIST.Photo'),
+ 	images: DS.hasMany('ULIST.Image'),
  	price: DS.belongsTo('ULIST.Price'),
  	created: DS.attr('date'),
  	expires: DS.attr('date'),
@@ -46,7 +46,7 @@ ULIST.Book = Ember.Object.extend({
 
 
 // Listing Photo model 
- ULIST.Photo = DS.Model.extend({
+ ULIST.Image = DS.Model.extend({
  	primaryKey: '_id',
  	_id: DS.attr('number'),
  	title: DS.attr('string'),
@@ -72,6 +72,8 @@ ULIST.Book = Ember.Object.extend({
 
 // Listing Address model 
  ULIST.Address = DS.Model.extend({
+ 	city: DS.attr('string'),
+ 	state: DS.attr('string'),
  	address: DS.attr('string'),
  	zip: DS.attr('string')
  });

@@ -27,15 +27,15 @@ ULIST.User = Ember.Object.extend({
  	listing_type: '',
  	reply_to: '',
  	email: '', // this may be the same thing as reply to 
- 	location: [],
- 	keywords: [], // list of keywords ',' delineated? 
- 	photos: [],
- 	price: [],
+ 	location: [], // ["latitude":"48 N","logitude":"53 S"]
+ 	keywords: [], // [{"word":"some_keyword"},{},...]
+ 	images: [],	// [{"title":"some_title", "url":"some_url"},{},...]
+ 	price: [],	// [{"dollars":"45","cents":"50"}] = $45.50
  	created: null,
  	expires: null,
- 	address: [],
+ 	address: [],	// [{"address":"4th st. s","city":"ARLINGTON","state":"VA","zip":"23453"},{},...]
  	meta: '',
- 	flags: [],
+ 	flags: [],	// [{"type":"ill"}]
 
  	// this is just to show the power of ember and what we can do
  	combinedTitle: function() {
@@ -80,6 +80,8 @@ ULIST.User = Ember.Object.extend({
 // Listing Address model 
  ULIST.Address = Ember.Object.extend({
  	address: '',
+ 	city: '',
+ 	state: '',
  	zip: ''
  });
 
