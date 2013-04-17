@@ -15,6 +15,13 @@ module.exports = {
             clientID: "APP_ID"
             , clientSecret: "APP_SECRET"
             , callbackURL: "http://localhost:3000/auth/facebook/callback"
+        },
+        image: {
+            S3: {
+                key: 'API_KEY',
+                secret: 'SECRET',
+                bucket: 'BUCKET_NAME'
+            }
         }
     }
     , test: {
@@ -28,12 +35,5 @@ module.exports = {
             name: 'uList'
         },
         db_url: 'mongodb://ulink:ulink@linus.mongohq.com:10098/ulist-dev'
-    },
-    image: {
-        S3: {
-            key: 'API_KEY',
-            secret: 'SECRET',
-            bucket: 'BUCKET_NAME'
-        }
     }
 }

@@ -32,17 +32,18 @@ var ObjectId = db.ObjectId;
 exports.findAll = function(req, res) {
     db.categories.find({}, function(err, categories) {
         if ( err ) {
+            console.log("{Categories.findAll} Error: " + err);
             if(!res) {
-                req.io.respond( {error : "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+                req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
             } else {
-                res.send({error : "There was an issue with your request." }, response.SYSTEM_ERROR.code);
+                res.send({error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
             }
         }
         else if(!categories ) {
             if(!res) {
-                req.io.respond( {categories : new Array() } , response.SUCCESS.code);
+                req.io.respond( {categories : {}} , response.SUCCESS.code);
             } else {
-                res.send({categories : new Array()  }, response.SUCCESS.code);
+                res.send({categories : {}  }, response.SUCCESS.code);
             }
         }
         else {
@@ -64,17 +65,18 @@ exports.findAll = function(req, res) {
 exports.findById = function(req, res) {
     db.categories.find({ _id: ObjectId(req.params.id) }, function(err, category) {
         if ( err ) {
+            console.log("{Categories.findById} Error: " + err);
             if(!res) {
-                req.io.respond( {error : "There was an issue with your request." } , response.SYSTEM_ERROR.code);
+                req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
             } else {
-                res.send({error :  "There was an issue with your request." }, response.SYSTEM_ERROR.code);
+                res.send({error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
             }
         }
         else if(!category ) {
             if(!res) {
-                req.io.respond( {category : new Array() } , response.SUCCESS.code);
+                req.io.respond( {category : {} } , response.SUCCESS.code);
             } else {
-                res.send({category : new Array()  }, response.SUCCESS.code);
+                res.send({category : {}  }, response.SUCCESS.code);
             }
         }
         else {

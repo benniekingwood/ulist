@@ -4,7 +4,10 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "express": "3.x"
+        "express": "3.x",
+        "express.io": "1.1.11",
+        "mongodb": "1.2.14",
+        "mongojs": "0.7.2"
     },
     "keywords": [
         "college",
