@@ -5,34 +5,7 @@
  * Description: This script will handle all listing CRUD, and special business
  *              logic.
  *
- * Listings JSON
- * {
-    "user_id": 34,
-    "school_id": 3,
-    "title": "this is the listing title",
-    "description": "This is the listing description",
-    "type": "headline",
-    "category": "Jobs",
-    "email": "joe@gmail.com",
- "address": [
- {
-     "street": "3543 big drive",
-     "zip": "45445"
- }
- ],
- "image_urls": [
- "url1",
- "url2"
- ],
- "tags": [
- "tag1",
- "tag2"
- ],
- "meta": [
- "bold",
- "listing pic"
- ]
- }
+ * Listings JSON - see mock_data/
  ********************************************************************************/
 var env = process.env.NODE_ENV || 'development'
     ,config = require('../../config/config')[env],
@@ -112,20 +85,43 @@ function validate(listing, mode, id) {
 }
 
 /**
+ * This function will build the search query
+ * for listings
+ *
+ * @param params
+ * @returns {Array}
+ */
+function buildSearchQuery(params) {
+    var query = {};
+    // determine the query type
+    switch(params.qt) {
+        case 's':
+            query['$or'] = [{tags : {$regex : params.t}},{title : {$regex : params.t}}];
+            query['school_id'] = parseInt(params.sid);
+            break;
+        case 'c':
+            // add main and sub category and school id
+            query['main_category'] = params.mc;
+            query['category'] = params.c;
+            query['school_id'] = parseInt(params.sid);
+            break;
+        case 'u':
+            // searching against the user only
+            query['user_id'] = parseInt(params.uid);
+            break;
+    }
+    return query;
+}
+
+/**
  * This is function will find all the listings based on the
  * passed in parameters
  * @param req
  * @param res
  */
 exports.findAll = function(req, res) {
-    console.log(req.query);
-    // TODO: have query param that denotes the type of search q=1 for Searching, u=1 for user search,
-    // TODO: all by user_id (my listings)
-    // TODO: This is for grabbing all the recent by category - by category and school_id ? but what about the categories that have Generals? we need to figure that out
-
-    // TODO: Searching - search against the tag, title with LIKEs
-
-    db.listings.find({}, function(err, listings) {
+    var query = buildSearchQuery(req.query);
+    db.listings.find(query, function(err, listings) {
         if ( err ) {
             console.log("{listings.findById} Error: " + err);
             if(!res) {

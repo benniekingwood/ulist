@@ -1,1 +1,11 @@
-{"category" : ["For Sale", "Jobs", "Housing"]}
+{
+    name: "Gameday",
+    subcategories: [
+        "Subleases",
+        "Roommates",
+        "Tickets",
+        "Transportation",
+        "Tailgating",
+        "General"
+    ]
+}

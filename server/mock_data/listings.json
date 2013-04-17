@@ -1,12 +1,13 @@
 {
     "user_id": 34,
     "school_id": 3,
-    "title": "this is the post title",
-    "description": "This is the post description",
+    "title": "this is the listing title",
+    "description": "This is the listing description",
     "type": "headline",
-    "category": "Jobs",
+    "main_category": "Campus",
+    "category": "Event Tickets",
     "email": "joe@gmail.com",
-    "address": [
+    "location": [
         {
             "street": "3543 big drive",
             "zip": "45445"

@@ -5,12 +5,7 @@
  * Description:  This script will handle all category CRUD, and special business
  *              logic.
  *
- * Category JSON (How it is stored in mongo)
- * {
- *  "_id": "unique",
- *  "name": "category",
- *  "sub-categories": ["sub-category-1", "sub-category-2"]
- * }
+ * Category JSON - see mock_data/
  ********************************************************************************/
 var env = process.env.NODE_ENV || 'development'
     ,config = require('../../config/config')[env],
