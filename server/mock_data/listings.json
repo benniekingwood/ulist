@@ -1,28 +1,32 @@
 {
     "user_id": 34,
-    "school_id": 3,
+    "school_id": 1,
     "title": "this is the listing title",
     "description": "This is the listing description",
     "type": "headline",
     "main_category": "Campus",
     "category": "Event Tickets",
-    "email": "joe@gmail.com",
-    "location": [
-        {
-            "street": "3543 big drive",
-            "zip": "45445"
-        }
-    ],
-    "image_urls": [
-        "url1",
-        "url2"
+    "reply_to": "bennie@gmail.com",
+    "location":
+    {
+        "street": "3543 big drive",
+        "city": "Newport News",
+        "state": "VA",
+        "zip": "45445",
+        "latitude": "37.225",
+        "longitude": "-80.425"
+    }
+    ,
+    "file": [
+        "http://amazon.thethe.com",
+        "http://amazon.thethe.com"
     ],
     "tags": [
-        "tag1",
-        "tag2"
+        "hightop",
+        "layover"
     ],
-    "meta": [
-        "bold",
-        "listing pic"
-    ]
+    "meta":
+    {
+        "duration": 1
+    }
 }

@@ -36,16 +36,16 @@ exports.findAll = function(req, res) {
         }
         else if(!categories ) {
             if(!res) {
-                req.io.respond( {categories : {}} , response.SUCCESS.code);
+                req.io.respond( {}, response.SUCCESS.code);
             } else {
-                res.send({categories : {}  }, response.SUCCESS.code);
+                res.send({}, response.SUCCESS.code);
             }
         }
         else {
             if(!res) {
-                req.io.respond( {categories : categories } , response.SUCCESS.code);
+                req.io.respond(  categories , response.SUCCESS.code);
             } else {
-                res.send({categories : categories }, response.SUCCESS.code);
+                res.send( categories, response.SUCCESS.code);
             }
         }
     });
@@ -69,16 +69,16 @@ exports.findById = function(req, res) {
         }
         else if(!category ) {
             if(!res) {
-                req.io.respond( {category : {} } , response.SUCCESS.code);
+                req.io.respond(  {} , response.SUCCESS.code);
             } else {
-                res.send({category : {}  }, response.SUCCESS.code);
+                res.send({}, response.SUCCESS.code);
             }
         }
         else {
             if(!res) {
-                req.io.respond( {category : category } , response.SUCCESS.code);
+                req.io.respond(category , response.SUCCESS.code);
             } else {
-                res.send({category : category }, response.SUCCESS.code);
+                res.send(category, response.SUCCESS.code);
             }
         }
     });
