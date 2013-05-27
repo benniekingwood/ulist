@@ -105,8 +105,12 @@ function buildSearchQuery(params) {
     // determine the query type
     switch(params.qt) {
         case 's':
+            // search on the tags OR the title
             query['$or'] = [{tags : {$regex : params.t}},{title : {$regex : params.t}}];
+            // add main and sub category and school id
             query['school_id'] = parseInt(params.sid);
+            query['main_category'] = params.mc;
+            query['category'] = params.c;
             break;
         case 'c':
             // add main and sub category and school id
