@@ -109,8 +109,9 @@ function buildSearchQuery(params) {
             query['$or'] = [{tags : {$regex : params.t}},{title : {$regex : params.t}}];
             // add main and sub category and school id
             query['school_id'] = parseInt(params.sid);
-            query['main_category'] = params.mc;
-            query['category'] = params.c;
+            // main category and sub category query params are optional
+            if(params.mc != undefined) {query['main_category'] = params.mc;}
+            if(params.c != undefined) {query['category'] = params.c};
             break;
         case 'c':
             // add main and sub category and school id
@@ -133,7 +134,7 @@ function buildSearchQuery(params) {
  * @param res
  */
 exports.findAll = function(req, res) {
-    var query = buildSearchQuery(req.query);
+    var query = buildSearchQuery(req.query); 
     db.listings.find(query, function(err, listings) {
         if ( err ) {
             console.log("{listings.findById} Error: " + err);
