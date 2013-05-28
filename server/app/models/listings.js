@@ -105,8 +105,8 @@ function buildSearchQuery(params) {
     // determine the query type
     switch(params.qt) {
         case 's':
-            // search on the tags OR the title
-            query['$or'] = [{tags : {$regex : params.t}},{title : {$regex : params.t}}];
+            // search on the tags OR the title, will ignore the case as well
+            query['$or'] = [{tags : {$regex : params.t, $options: 'i' }},{title : {$regex : params.t, $options: 'i' }}];
             // add main and sub category and school id
             query['school_id'] = parseInt(params.sid);
             // main category and sub category query params are optional
@@ -134,7 +134,7 @@ function buildSearchQuery(params) {
  * @param res
  */
 exports.findAll = function(req, res) {
-    var query = buildSearchQuery(req.query); 
+    var query = buildSearchQuery(req.query);
     db.listings.find(query, function(err, listings) {
         if ( err ) {
             console.log("{listings.findById} Error: " + err);
