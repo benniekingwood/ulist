@@ -22,6 +22,13 @@ var collections = ["listings"];
 var db = require("mongojs").connect(config.db_url, collections);
 var ObjectId = db.ObjectId;
 
+/*
+ * LIST_FETCH_SIZE - constant we will use to define how many listing
+ *                 - results we fetch at any given time 
+ */
+var LIST_FETCH_SIZE = 10
+var LIST_FETCH_SIZE_MAX = 25
+
 /**
  * This function will validate the basic listing information.
  * @param retVal
@@ -130,12 +137,17 @@ function buildSearchQuery(params) {
 /**
  * This is function will find all the listings based on the
  * passed in parameters
+ *  batchNum - will be passed in query params as batch=<number>
+ *           - this will allow us to load a prefix no. of results
+ *           - to reduce stress load
  * @param req
  * @param res
  */
 exports.findAll = function(req, res) {
+    var batchNum = parseInt(req.query.b);
+    console.log("batch number: " + batchNum);
     var query = buildSearchQuery(req.query);
-    db.listings.find(query, function(err, listings) {
+    db.listings.find(query).skip(batchNum * LIST_FETCH_SIZE).limit(LIST_FETCH_SIZE, function(err, listings) {
         if ( err ) {
             console.log("{listings.findById} Error: " + err);
             if(!res) {
@@ -159,6 +171,7 @@ exports.findAll = function(req, res) {
             }
         }
     });
+    /*}).skip(batch * LIST_FETCH_SIZE).limit(LIST_FETCH_SIZE);*/
 };
 
 /**

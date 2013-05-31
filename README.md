@@ -103,5 +103,31 @@ Searching<br />
 Categories
 TBD - see craigslist
 
+Querying
+-----------------------------
+qt - query type 
+can have values of "s", "c", or "u" 
+"s" is for searching 
+"c" is for category loading 
+"u" is for user listing retrieval 
+if you do qt=s, then you have to pass the following params: sid, t 
+sid = school id 
+t = is the search text 
+for qt=c (category searching) 
+you need, mc, c, and sid 
+mc="main category text" 
+c="sub category text" 
+sid=school id 
+finally qt=u, you just need uid=user id 
+
+Ex.
+//<server_domain>/api/listings/?qt=s&sid=3&t=tickets
+
+we just need to denote a "batch size" 
+and it needs to stay constant 
+we grab listings how we normally would right 
+let's say 1000 results are returned 
+based on the batch # and a place holder id (the primary key for the document), we can determine what data we need 
+
 
 
