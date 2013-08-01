@@ -8,9 +8,12 @@
  * Listings JSON - see mock_data/
  ********************************************************************************/
 var env = process.env.NODE_ENV || 'development'
-    ,config = require('../../config/config')[env],
-    response = require('../../response'),
-    moment = require('moment');
+    ,config = require('../../config/config')[env]
+    ,response = require('../../response')
+    ,moment = require('moment')
+    ,imageUtil = require('../util/imageutil')
+    ,stringUtil = require('../util/stringutil')
+    ,geocoder = require('geocoder');
 
 // define the collections used for this model
 // TODO: build listing name off of user's college id (i.e listings-1)
@@ -26,8 +29,8 @@ var ObjectId = db.ObjectId;
  * LIST_FETCH_SIZE - constant we will use to define how many listing
  *                 - results we fetch at any given time 
  */
-var LIST_FETCH_SIZE = 10
-var LIST_FETCH_SIZE_MAX = 25
+var LIST_FETCH_SIZE = 100;
+var LIST_FETCH_SIZE_MAX = 100;
 
 /**
  * This function will validate the basic listing information.
@@ -135,6 +138,100 @@ function buildSearchQuery(params) {
 }
 
 /**
+ * This function will save the images on the listing to the desired
+ * destiniation based on the environment variables.
+ * @param listing
+ * @returns {{}}
+ */
+function saveListingImages(listing) {
+    var retVal = {};
+    // next upload to s3 if there are images
+    if(listing.images != undefined) {
+        var failedUpload = false;
+        var imageURLs = [];
+        // iterate over the base64 image strings and upload to [Local disk | s3]
+        for(var x=0; x<listing.images.length;x++) {
+            // generate the file name for the image (listing-userId-randomString.[jpg|png|gif])
+            var fileName = 'listing-' + listing['user_id'];
+            fileName += '-' + stringUtil.getRandomString(5 , 10, true, false, true);
+
+            // TODO: use image util to determine type of image, then send the content type as a param to saveToS3
+            fileName += '.jpg';
+
+            // build the configuration for saving the image
+            var options = {
+                s3Bucket: config.image.S3.bucket,
+                destinationPath : config.root + config.image.path,
+                base64Image : listing.images[x],
+                fileName : fileName,
+                saveTos3 : config.image.S3.active,
+                saveThumb : true,
+                saveMedium : true,
+                thumbDestinationPath: config.root + config.image.pathThumb,
+                mediumDestinationPath : config.root + config.image.pathMedium
+            };
+
+            // save the images for the listing
+            var result = imageUtil.saveImage(options);
+
+            // if there were errors when attempting to save the image, remove any saved images for this listing, and return the error code
+            if(result.error != undefined) {
+                failedUpload = true;
+                for(var y=0; y<imageURLs.length; y++)  {
+                    var tokens = imageURLs[y].split('/');
+                    imageUtil.deleteImage(tokens[tokens.length-1]);
+                }
+                break;
+            } else {
+                imageURLs.push(config.image.url + fileName);
+            }
+        }
+        if(failedUpload) {
+            retVal.response = result.error;
+        } else {
+            // remove the images from the listing array
+            delete listing.images;
+            // add the image urls
+            listing.image_urls = imageURLs;
+            // set the response as a success
+            retVal.response = response.SUCCESS.code;
+        }
+    } else {
+        retVal.response = response.SUCCESS.code;
+    }
+    retVal.listing = listing;
+    return retVal;
+}
+
+/**
+ * This function will use the geocoder to
+ * reverse geocode the listing to retrieve the
+ * listings latitude and longitude.
+ * @param listing
+ * @returns {*}
+ */
+function retrieveListingLatLng(listing) {
+    if(listing.location != undefined) {
+        var address = listing.location.street;
+        address = address.concat(" ");
+        address = address.concat(listing.location.city);
+        address = address.concat(", ");
+        address = address.concat(listing.location.state);
+        address = address.concat(" ");
+        address = address.concat(listing.location.zip);
+        geocoder.geocode(address, function ( err, data ) {
+            if(err) {
+                console.log("{Listing#retrieveListingLatLng} Error attemping to find geocode: " + err);
+            } else if(data.status == 'OK') {
+                listing.location.latitude = data.results[0].geometry.location.lat;
+                listing.location.longitude = data.results[0].geometry.location.lng;
+            }
+        });
+    }
+    return listing;
+}
+
+/**
  * This is function will find all the listings based on the
  * passed in parameters
  *  batchNum - will be passed in query params as batch=<number>
@@ -145,7 +242,6 @@ function buildSearchQuery(params) {
  */
 exports.findAll = function(req, res) {
     var batchNum = parseInt(req.query.b);
-    console.log("batch number: " + batchNum);
     var query = buildSearchQuery(req.query);
     db.listings.find(query).skip(batchNum * LIST_FETCH_SIZE).limit(LIST_FETCH_SIZE, function(err, listings) {
         if ( err ) {
@@ -171,7 +267,6 @@ exports.findAll = function(req, res) {
             }
         }
     });
-    /*}).skip(batch * LIST_FETCH_SIZE).limit(LIST_FETCH_SIZE);*/
 };
 
 /**
@@ -236,27 +331,46 @@ exports.createListing = function(req, res) {
         // shorten the description for the short_description field.  limit to 40 chars.
         listing['short_description'] = (listing.description.length > 40) ? listing.description.substring(0,40) + "..." : listing.description;
 
-        db.listings.save(listing, function(err, result) {
-             if ( err ) { console.log("{Listing#createListing} Error : " + err);
+        // if location is present, attempt to determine lat long with reverse geo location
+        listing = retrieveListingLatLng(listing);
+
+        // if there are images present, attempt to save them
+        var result = saveListingImages(listing);
+        listing = result.listing;
+
+        if(result.response == response.IMAGE.LOCAL_DISK.UPLOAD_ERROR.code ||
+            result.response == response.IMAGE.S3.UPLOAD_ERROR.code) {
+            console.log("{Listing#createListing} Error : " + result.message);
+            if(!res) {
+                req.io.respond( {error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+            } else {
+                res.send({error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+            }
+        } else { // since it was a successful upload, we can then save to the db
+            db.listings.save(listing, function(err, result) {
+                 if ( err ) { console.log("{Listing#createListing} Error : " + err);
+                    // TODO: remove any uploaded images if necessary
                     if(!res) {
                         req.io.respond( { error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
                     } else {
                         res.send({ error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
                     }
-            } else if(!result ) {
-                if(!res) {
-                    req.io.respond( {error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                } else if(!result ) {
+                     // TODO: remove any uploaded images if necessary
+                    if(!res) {
+                        req.io.respond( {error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                    } else {
+                        res.send({error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                    }
                 } else {
-                    res.send({error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                    if(!res) {
+                        req.io.respond( result  , response.SUCCESS.code);
+                    } else {
+                        res.send( result , response.SUCCESS.code);
+                    }
                 }
-            } else {
-                if(!res) {
-                    req.io.respond( result  , response.SUCCESS.code);
-                } else {
-                    res.send( result , response.SUCCESS.code);
-                }
-            }
-        });
+            });
+        }
     } else {
         if(!res) {
             req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
