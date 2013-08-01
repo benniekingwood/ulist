@@ -4,36 +4,46 @@
  * Created On: 3/20/13
  * Description: This file will contain all of the environment specific variables
  ********************************************************************************/
+var pa = require('path');
 module.exports = {
     development: {
-        root: require('path').normalize(__dirname + '/..'),
+        root: pa.normalize(__dirname + '/..'),
         app: {
             name: 'uList'
         },
         db_url: 'mongodb://ulink:ulink@linus.mongohq.com:10098/ulist-dev',
-        paypal: {
-            clientID: "APP_ID"
-            , clientSecret: "APP_SECRET"
-            , callbackURL: "http://localhost:3000/auth/facebook/callback"
-        },
         image: {
             S3: {
-                key: 'API_KEY',
-                secret: 'SECRET',
-                bucket: 'BUCKET_NAME'
-            }
+                active: false,
+                key: 'AKIAIWNS6CENCJVPALBA',
+                secret: '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',
+                bucket: 'ulink_images',
+                region: 'us-east-1'
+            },
+            path: '/public/img/listings/',
+            pathThumb: '/public/img/listings/thumb/',
+            pathMedium: '/public/img/listings/medium/',
+            url: 'http://localhost:3737/img/listings/'
         }
     }
-    , test: {
-        app: {
-            name: 'uList'
-        },
-        db_url: 'mongodb://ulink:ulink@linus.mongohq.com:10098/ulist-dev'
-    }
     , production: {
+        root: pa.normalize(__dirname + '/..'),
         app: {
             name: 'uList'
         },
-        db_url: 'mongodb://ulink:ulink@linus.mongohq.com:10098/ulist-dev'
+        db_url: 'mongodb://ulink:ulink@linus.mongohq.com:10098/ulist-dev',
+        image: {
+            S3: {
+                active: true,
+                key: 'AKIAIWNS6CENCJVPALBA',
+                secret: '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',
+                bucket: 'ulink_images',
+                region: 'us-east-1'
+            },
+            path: 'img/listings/',
+            pathThumb: 'img/listings/thumb/',
+            pathMedium: 'img/listings/medium/',
+            url: 'https://s3.amazonaws.com/ulink_images/img/listings/'
+        }
     }
 }
