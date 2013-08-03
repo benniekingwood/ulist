@@ -36,6 +36,7 @@ module.exports = function (app) {
     var category = require('../app/models/categories');
     app.get('/api/categories', category.findAll);
     app.get('/api/categories/:id', category.findById);
+    app.get('/api/categories/top/:limit', category.findTopCategories);
 
     // socket category routes
     app.io.route('categories', {
