@@ -93,34 +93,45 @@ exports.findById = function(req, res) {
  * @param res
  */
 exports.findTopCategories = function(req, res) {
-   var limit = (req.params.limit != undefined && parseInt(req.params.limit) > 0) ? parseInt(req.params.limit) : 3;
-   db.listings.aggregate(
-  [
-    { $group : { _id : {category:"$category"} , count : { $sum : 1 } } },
-    { $sort : { "count" : -1 } },
-    { $limit : limit }
-  ], function(err, category) {
-        if ( err ) {
-            console.log("{Categories.findTopCategories} Error: " + err);
-            if(!res) {
-                req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
-            } else {
-                res.send({error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+   var reqJSON = req.body;
+   var limit = (reqJSON.limit != undefined && parseInt(reqJSON.limit) > 0) ? parseInt(reqJSON.limit) : 3;
+   var schoolId = reqJSON.sid;
+   if(schoolId != undefined && parseInt(schoolId) > 0) {
+        db.listings.aggregate(
+          [
+            { $group : { _id : {category:"$category"} , count : { $sum : 1 } } },
+            { $sort : { "count" : -1 } },
+            { $limit : limit }
+          ], function(err, category) {
+            if ( err ) {
+                console.log("{Categories.findTopCategories} Error: " + err);
+                if(!res) {
+                    req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+                }
             }
-        }
-        else if(!category ) {
-            if(!res) {
-                req.io.respond(  {} , response.SUCCESS.code);
-            } else {
-                res.send({}, response.SUCCESS.code);
+            else if(!category ) {
+                if(!res) {
+                    req.io.respond(  {} , response.SUCCESS.code);
+                } else {
+                    res.send({}, response.SUCCESS.code);
+                }
             }
-        }
-        else {
-            if(!res) {
-                req.io.respond(category , response.SUCCESS.code);
-            } else {
-                res.send(category, response.SUCCESS.code);
+            else {
+                if(!res) {
+                    req.io.respond(category , response.SUCCESS.code);
+                } else {
+                    res.send(category, response.SUCCESS.code);
+                }
             }
+        });
+    } else {
+        var errors = { school_id : 'A valid school id is required.'};
+        if(!res) {
+            req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
+        } else {
+            res.send({errors : errors }, response.VALIDATION_ERROR.code);
         }
-    });
+    }
 };

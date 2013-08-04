@@ -464,3 +464,55 @@ exports.deleteListing = function(req, res) {
         }
     }
 };
+
+/**
+ * This function will find the tags that have been used the most
+ * listings.  The amount that the server will retrieve is 
+ * based on the params
+ * passed in id
+ * @param req
+ * @param res
+ */
+exports.findTopTags= function(req, res) {
+   var reqJSON = req.body;
+   var limit = (reqJSON.limit != undefined && parseInt(reqJSON.limit) > 0) ? parseInt(reqJSON.limit) : 3;
+   var schoolId = reqJSON.sid;
+   if(schoolId != undefined && parseInt(schoolId) > 0) {
+        db.listings.aggregate(
+          [
+            { $group : { _id : {tags:"$tags"} , count : { $sum : 1 } } },
+            { $sort : { "count" : -1 } },
+            { $limit : limit }
+          ], function(err, category) {
+            if ( err ) {
+                console.log("{Categories.findTopTags} Error: " + err);
+                if(!res) {
+                    req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+                }
+            }
+            else if(!category ) {
+                if(!res) {
+                    req.io.respond(  {} , response.SUCCESS.code);
+                } else {
+                    res.send({}, response.SUCCESS.code);
+                }
+            }
+            else {
+                if(!res) {
+                    req.io.respond(category , response.SUCCESS.code);
+                } else {
+                    res.send(category, response.SUCCESS.code);
+                }
+            }
+        });
+    } else {
+        var errors = { school_id : 'A valid school id is required.'};
+        if(!res) {
+            req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
+        } else {
+            res.send({errors : errors }, response.VALIDATION_ERROR.code);
+        }
+    }
+};

@@ -12,6 +12,7 @@ module.exports = function (app) {
     app.post('/api/listings', listing.createListing);
     app.put('/api/listings/:id', listing.updateListing);
     app.delete('/api/listings/:id', listing.deleteListing);
+    app.post('/api/listings/toptags', listing.findTopTags);
 
     // socket listing routes
     app.io.route('listings', {
@@ -36,7 +37,7 @@ module.exports = function (app) {
     var category = require('../app/models/categories');
     app.get('/api/categories', category.findAll);
     app.get('/api/categories/:id', category.findById);
-    app.get('/api/categories/top/:limit', category.findTopCategories);
+    app.post('/api/categories/top', category.findTopCategories);
 
     // socket category routes
     app.io.route('categories', {
