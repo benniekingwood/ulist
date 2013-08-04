@@ -13,6 +13,7 @@ module.exports = function (app) {
     app.put('/api/listings/:id', listing.updateListing);
     app.delete('/api/listings/:id', listing.deleteListing);
     app.post('/api/listings/toptags', listing.findTopTags);
+    app.post('/api/listings/recent', listing.findRecentListings);
 
     // socket listing routes
     app.io.route('listings', {
