@@ -516,3 +516,57 @@ exports.findTopTags= function(req, res) {
         }
     }
 };
+
+/**
+ * This query will find the most recent listings for
+ * a specified school using the created date
+ * based on the params
+ * passed in id
+ * @param req
+ * @param res
+ */
+exports.findRecentListings = function(req, res) {
+    var reqJSON = req.body;
+    var limit = (reqJSON.limit != undefined && parseInt(reqJSON.limit) > 0) ? parseInt(reqJSON.limit) : 5;
+    var schoolId = reqJSON.sid;
+    console.log("school id: " + schoolId);
+    console.log("limit: " + limit);
+    if(schoolId != undefined && parseInt(schoolId) > 0) {
+        db.listings.aggregate(
+          [
+            { $match : { school_id : parseInt(schoolId) } },
+            { $sort : { "created" : -1 } },
+            { $limit : limit }
+          ], function(err, listings) {
+            if ( err ) {
+                console.log("{listings.findRecentListings} Error: " + err);
+                if(!res) {
+                    req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+                }
+            }
+            else if(!listings ) {
+                if(!res) {
+                    req.io.respond(  {} , response.SUCCESS.code);
+                } else {
+                    res.send({}, response.SUCCESS.code);
+                }
+            }
+            else {
+                if(!res) {
+                    req.io.respond(listings , response.SUCCESS.code);
+                } else {
+                    res.send(listings, response.SUCCESS.code);
+                }
+            }
+          });
+    } else {
+        var errors = { school_id : 'A valid school id is required.'};
+        if(!res) {
+            req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
+        } else {
+            res.send({errors : errors }, response.VALIDATION_ERROR.code);
+        }
+    }
+};
