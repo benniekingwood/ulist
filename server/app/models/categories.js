@@ -100,7 +100,7 @@ exports.findTopCategories = function(req, res) {
         db.listings.aggregate(
           [
             { $match : { school_id : parseInt(schoolId) } },
-            { $group : { _id : {category:"$category"} , count : { $sum : 1 } } },
+            { $group : { _id : {category:"$category",main_category:"$main_category"} , count : { $sum : 1 } } },
             { $sort : { "count" : -1 } },
             { $limit : limit }
           ], function(err, category) {
