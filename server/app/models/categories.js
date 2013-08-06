@@ -99,6 +99,7 @@ exports.findTopCategories = function(req, res) {
    if(schoolId != undefined && parseInt(schoolId) > 0) {
         db.listings.aggregate(
           [
+            { $match : { school_id : parseInt(schoolId) } },
             { $group : { _id : {category:"$category"} , count : { $sum : 1 } } },
             { $sort : { "count" : -1 } },
             { $limit : limit }
