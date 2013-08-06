@@ -480,6 +480,8 @@ exports.findTopTags= function(req, res) {
    if(schoolId != undefined && parseInt(schoolId) > 0) {
         db.listings.aggregate(
           [
+            { $match : { school_id : parseInt(schoolId) } },
+            { $unwind: '$tags'},
             { $group : { _id : {tags:"$tags"} , count : { $sum : 1 } } },
             { $sort : { "count" : -1 } },
             { $limit : limit }
