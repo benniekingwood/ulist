@@ -314,18 +314,19 @@ exports.createListing = function(req, res) {
         // created date
         listing['created'] = moment().format("YYYY-MM-DD h:mm:ss A");
         /*
-         * If the listing type is headline, we need to check for the
+         * If the listing type is headline or bold, we need to check for the
          * duration that the client purchased.  If there is no duration for
-         * some reason, we will default to 3 days which is the max for a
-         * headline.
+         * some reason, we will default to 7 days which is the max for a
+         * headline/bold.
          */
-        if(listing.type == "headline") {
-            if(listing.meta == undefined) { listing['meta']['duration'] = 3;}
-            else if (listing.meta.duration == undefined) { listing.meta['duration'] = 3; }
-            listing['expires'] = moment().add('days', parseInt(listing.meta.duration));
-        } else { // we can assume that we want to add 7 days as a standard
-            listing['expires'] = moment().add('days', 7);
+        if(listing.meta == undefined) { 
+            listing['meta']['duration'] = 7;
+        } else if (listing.meta.duration == undefined) { 
+            listing.meta['duration'] = 7; 
         }
+        listing['expires'] = moment().add('days', parseInt(listing.meta.duration));
+        
+        // now format the expires date
         listing['expires'] = listing['expires'].format("YYYY-MM-DD h:mm:ss A");
 
         // shorten the description for the short_description field.  limit to 40 chars.
