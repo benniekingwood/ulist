@@ -122,18 +122,39 @@ function buildSearchQuery(params) {
             // main category and sub category query params are optional
             if(params.mc != undefined) {query['main_category'] = params.mc;}
             if(params.c != undefined) {query['category'] = params.c};
+            if(params.d != undefined) {
+                query = queryNonExpired(query);
+            }
             break;
         case 'c':
             // add main and sub category and school id
             query['main_category'] = params.mc;
             query['category'] = params.c;
             query['school_id'] = parseInt(params.sid);
+            if(params.d != undefined) {
+                query = queryNonExpired(query);
+            }
             break;
         case 'u':
             // searching against the user only
             query['user_id'] = parseInt(params.uid);
             break;
     }
+    return query;
+}
+
+/**
+ * Helper function that will add the expired date range parameters 
+ * the the search query
+ * @param query 
+ *          query object that will contain the search parameters for mongo
+ */
+function queryNonExpired(query) {
+    // create a date that is 7 days before the current date
+    var validDate = moment().subtract('days', parseInt(7));
+    // now format the date
+    validDate = validDate.format("YYYY-MM-DD h:mm:ss A");
+    query['expires'] = {$gte: validDate};
     return query;
 }
 
