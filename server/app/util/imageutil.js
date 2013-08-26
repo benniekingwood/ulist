@@ -127,7 +127,6 @@ var save = {
                         }
                     });
                 } else { // else save to disk
-                    console.log('writing file');
                     fs.writeFile(data.Key, data.Body, 'binary', function(err) {
                         if (err) {
                             console.log("{imageutil#save.medium} Error saving medium to disk : " + err);
@@ -169,38 +168,64 @@ exports.saveImage = function (options) {
 exports.deleteImage = function (options) {
     var retVal;
     // if there are no s3 configurations, save to disk
-    if(options.s3Enabled == true) {
-        retVal = this.deleteFromS3(config.image.path+options.fileName);
+    if(options.saveTos3 == true) {
+        retVal = this.deleteFromS3(options);
     } else {
-        retVal = this.deleteFromDisk(config.image.path+options.fileName);
+        retVal = this.deleteFromDisk(options);
     }
     return retVal;
 }
 
 exports.deleteFromS3 = function (options) {
-    var retVal = false;
+    var retVal = true;
     var data = {
         Bucket: options.s3Bucket,
-        Key: options.destinationPath
+        Key: options.destinationPath + options.fileName
     };
+    //  delete thumb and medium and original sized images from s3
     s3.deleteObject(data, function(err, data) {
         if (err) {
             console.log("{imageutil#deleteFromS3} Error : " + err);
-        } else {
-            retVal = true;
-        }
+            retVal = false;
+        } 
+    });
+    data.Key = options.mediumDestinationPath + options.fileName;
+    s3.deleteObject(data, function(err, data) {
+        if (err) {
+            console.log("{imageutil#deleteFromS3} Error : " + err);
+            retVal = false;
+        } 
+    });
+    data.Key = options.thumbDestinationPath + options.fileName;
+    s3.deleteObject(data, function(err, data) {
+        if (err) {
+            console.log("{imageutil#deleteFromS3} Error : " + err);
+            retVal = false;
+        } 
     });
     return retVal;
 }
 
 exports.deleteFromDisk = function (options) {
-    var retVal = false;
-    fs.unlink(options.destinationPath, function (err) {
+    var retVal = true;
+    //  delete thumb and medium and original sized images
+    fs.unlink(options.destinationPath + options.fileName, function (err) {
         if (err) {
-            console.log("{imageutil#removeFromDisk} Error : " + err);
-        } else {
-            retVal = true;
-        }
+            console.log("{imageutil#removeFromDisk:original} Error : " + err);
+            retVal = false;
+        } 
+    });
+    fs.unlink(options.mediumDestinationPath + options.fileName, function (err) {
+        if (err) {
+            console.log("{imageutil#removeFromDisk:medium} Error : " + err);
+            retVal = false;
+        } 
+    });
+    fs.unlink(options.thumbDestinationPath + options.fileName, function (err) {
+        if (err) {
+            console.log("{imageutil#removeFromDisk:thumb} Error : " + err);
+            retVal = false;
+        } 
     });
     return retVal;
 }

@@ -159,6 +159,48 @@ function queryNonExpired(query) {
 }
 
 /**
+ * This function will delete all the images associated with the passed in 
+ * listing.  If the server is in s3 mode, we will delete from the 
+ * s3 server.  If not in s3 mode the system will simply delete from the 
+ * relative server.
+ * @param listing
+ *                - the listing object
+ */
+function deleteListingImages(listing) {
+    if(listing != undefined && listing.image_urls != undefined) {
+        //build the configuration for saving the image
+        var options = {
+            s3Bucket: config.image.S3.bucket,
+            saveTos3 : config.image.S3.active
+        };
+
+        // set the option destination paths based on if we are saving to s3 or not
+        if(options.saveTos3) {
+            options.destinationPath = config.image.path;
+            options.thumbDestinationPath = config.image.pathThumb;
+            options.mediumDestinationPath = config.image.pathMedium;
+        } else {
+            options.destinationPath = config.root + config.image.path;
+            options.thumbDestinationPath = config.root + config.image.pathThumb;
+            options.mediumDestinationPath = config.root + config.image.pathMedium;
+        }
+
+        // iterate over the listing image urls and delete as necessary
+        for (var i = 0; i < listing.image_urls.length; i++) {
+            // split out the url to get the file name
+            var tokens = listing.image_urls[i].split('/');
+
+            // set the filename on the options to get ready for deletion
+            options.fileName = tokens[tokens.length-1];
+
+            // delete the images for the listing
+            var result = imageUtil.deleteImage(options);
+            // TODO: log image error to mongo logs
+        }
+    }
+}
+
+/**
  * This function will save the images on the listing to the desired
  * destiniation based on the environment variables.
  * @param listing
@@ -182,38 +224,48 @@ function saveListingImages(listing) {
             // build the configuration for saving the image
             var options = {
                 s3Bucket: config.image.S3.bucket,
-                destinationPath : config.root + config.image.path,
                 base64Image : listing.images[x],
                 fileName : fileName,
                 saveTos3 : config.image.S3.active,
                 saveThumb : true,
-                saveMedium : true,
-                thumbDestinationPath: config.root + config.image.pathThumb,
-                mediumDestinationPath : config.root + config.image.pathMedium
+                saveMedium : true
             };
+
+            // set the option destination paths based on if we are saving to s3 or not
+            if(options.saveTos3) {
+                options.destinationPath = config.image.path;
+                options.thumbDestinationPath = config.image.pathThumb;
+                options.mediumDestinationPath = config.image.pathMedium;
+            } else {
+                options.destinationPath = config.root + config.image.path;
+                options.thumbDestinationPath = config.root + config.image.pathThumb;
+                options.mediumDestinationPath = config.root + config.image.pathMedium;
+            }
 
             // save the images for the listing
             var result = imageUtil.saveImage(options);
 
-            // if there were errors when attempting to save the image, remove any saved images for this listing, and return the error code
+            /* if there were errors when attempting to save the image, state that the upload of the image failed 
+             * so that it can be handled properly later.
+             */
             if(result.error != undefined) {
                 failedUpload = true;
-                for(var y=0; y<imageURLs.length; y++)  {
-                    var tokens = imageURLs[y].split('/');
-                    imageUtil.deleteImage(tokens[tokens.length-1]);
-                }
                 break;
             } else {
                 imageURLs.push(config.image.url + fileName);
             }
         }
+
+        // remove the images from the listing array
+        delete listing.images;
+        // add the image urls
+        listing.image_urls = imageURLs;
+
         if(failedUpload) {
+            // remove all the successful image saves
+            deleteListingImages(listing);
             retVal.response = result.error;
         } else {
-            // remove the images from the listing array
-            delete listing.images;
-            // add the image urls
-            listing.image_urls = imageURLs;
             // set the response as a success
             retVal.response = response.SUCCESS.code;
         }
@@ -453,38 +505,54 @@ exports.updateListing = function(req, res) {
 exports.deleteListing = function(req, res) {
     var listing = req.params;
     var errors = validate(listing, "DELETE", req.params.id);
-    if(!errors) {
-        db.listings.remove({_id: ObjectId(listing.id) },{safe:true}, function(err, result) {
-            if ( err ) {
-                console.log("{Listing#deleteListing} Error : " + err);
-                if(!res) {
-                    req.io.respond( {error: response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+
+    // first retrieve the listing and create the listing object so we can have the image urls for deletion
+    db.listings.find({ _id: ObjectId(req.params.id) }, function(error, listing) {
+        if(listing && !error) {
+            // if there is a listing object found, we can next delete the listing
+            if(!errors) {
+                db.listings.remove({_id: ObjectId(req.params.id)}, {safe:true}, function(err, result) {
+                    if ( err ) {
+                        console.log("{Listing#deleteListing} Error : " + err);
+                        if(!res) {
+                            req.io.respond( {error: response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+                        } else {
+                            res.send({error :response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+                        }
+                    }
+                    else if(!result) {
+                        if(!res) {
+                            req.io.respond( {error : "There was a problem deleting your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                        } else {
+                            res.send({error : "There was a problem deleting your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                        }
+                    }
+                    else {
+                        //  remove the listing images if there are any
+                        deleteListingImages(listing[0]);
+                        if(!res) {
+                            req.io.respond( {} , response.SUCCESS.code);
+                        } else {
+                            res.send({}, response.SUCCESS.code);
+                        }
+                    }
+                });
+            } else {
+                 if(!res) {
+                    req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
                 } else {
-                    res.send({error :response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+                    res.send({errors : errors }, response.VALIDATION_ERROR.code);
                 }
             }
-            else if(!result ) {
-                if(!res) {
-                    req.io.respond( {error : "There was a problem deleting your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
-                } else {
-                    res.send({error : "There was a problem deleting your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
-                }
-            }
-            else {
-                if(!res) {
-                    req.io.respond( {} , response.SUCCESS.code);
-                } else {
-                    res.send({}, response.SUCCESS.code);
-                }
-            }
-        });
-    } else {
-         if(!res) {
-            req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
         } else {
-            res.send({errors : errors }, response.VALIDATION_ERROR.code);
+            // return the listing with that id not found response
+            if(!res) {
+                req.io.respond({errors :{id: 'A listing with that id was not found'}}, response.VALIDATION_ERROR.code);
+            } else {
+                res.send({errors : {errors :{id: 'A listing with that id was not found'}} }, response.VALIDATION_ERROR.code);
+            }
         }
-    }
+    });
 };
 
 /**
