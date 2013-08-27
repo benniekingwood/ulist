@@ -456,6 +456,20 @@ exports.createListing = function(req, res) {
 
 /**
  * This function will update a listing
+ *
+ * PROCESS TO UPDATE IMAGES
+ * If there is items in the listing.images array, then we know that the user modified the 
+ * listing images and we need to following the following steps: 
+ * 
+ * 1.  Retrieve the old listing, and pull out the imageURLS.
+ * 2.  Save the new listing images
+ *      a.  If success, add the new listing imageURLs go to 3.  Fail, add back the old imageURLS and go to 3.
+ * 3.  Save the listing data
+ *      a.  If success, return success to client.  Fail, return error to client.
+ * 
+ * 
+ *
+ *
  * @param req
  * @param res
  */
@@ -463,37 +477,70 @@ exports.updateListing = function(req, res) {
     var listing = req.body;
     // delete the id that was passed in for the listing, we don't want to overwrite the original id
     delete listing._id;
-    var errors = validate(listing, "PUT", req.params.id);
-    if(!errors) {
-        db.listings.update({_id: ObjectId(req.params.id)}, listing, function(err, result) {
-            if ( err ) {
-                    console.log("{Listing#updateListing} Error : " + err);
-                    if(!res) {
-                        req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
-                    } else {
-                        res.send({error : response.SYSTEM_ERROR.response  }, response.SYSTEM_ERROR.code);
+
+    // first retrieve the listing and create the listing object so we can have the old image urls for deletion
+    db.listings.find({ _id: ObjectId(req.params.id) }, function(error, results) {
+        if(results && !error) {
+            var errors = validate(listing, "PUT", req.params.id);
+            if(!errors) {
+                var oldListing = results[0];
+                // if there are listing images, remove the old listing imageURLs, and save the new listing imageURLs
+                if(listing.images != undefined) {
+                    var oldListingImageURLs = oldListing.image_urls;
+                    // if there are images present, attempt to save them
+                    var result = saveListingImages(listing);
+                    listing = result.listing;
+
+                    if(result.response == response.IMAGE.LOCAL_DISK.UPLOAD_ERROR.code ||
+                        result.response == response.IMAGE.S3.UPLOAD_ERROR.code) {
+                        console.log("{Listing#updateListing} Error : " + result.message);
+                        // set the oldImageURLS back on the updated listing
+                        listing.image_urls = oldListingImageURLs;
+                    } else { // successful new image save..
+                        // delete the old images now, the new imageURLs are already on the listing
+                        deleteListingImages(oldListing);
                     }
-            } else if(!result ) {
-                if(!res) {
-                    req.io.respond( {error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
-                } else {
-                    res.send({error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
                 }
+
+                // now we can update the listing finally in the db
+                db.listings.update({_id: ObjectId(req.params.id)}, listing, function(err, result) {
+                    if ( err ) {
+                            console.log("{Listing#updateListing} Error : " + err);
+                            if(!res) {
+                                req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+                            } else {
+                                res.send({error : response.SYSTEM_ERROR.response  }, response.SYSTEM_ERROR.code);
+                            }
+                    } else if(!result ) {
+                        if(!res) {
+                            req.io.respond( {error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+                        } else {
+                            res.send({error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+                        }
+                    } else {
+                        if(!res) {
+                            req.io.respond(  {}  , response.SUCCESS.code);
+                        } else {
+                            res.send( {} , response.SUCCESS.code);
+                        }
+                    }
+                });
             } else {
                 if(!res) {
-                    req.io.respond(  {}  , response.SUCCESS.code);
+                    req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
                 } else {
-                    res.send( {} , response.SUCCESS.code);
+                    res.send({errors : errors }, response.VALIDATION_ERROR.code);
                 }
             }
-        });
-    } else {
-        if(!res) {
-            req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
         } else {
-            res.send({errors : errors }, response.VALIDATION_ERROR.code);
+            // return the listing with that id not found response
+            if(!res) {
+                req.io.respond({errors :{id: 'A listing with that id was not found'}}, response.VALIDATION_ERROR.code);
+            } else {
+                res.send({errors : {errors :{id: 'A listing with that id was not found'}} }, response.VALIDATION_ERROR.code);
+            }
         }
-    }
+    });
 };
 
 /**
