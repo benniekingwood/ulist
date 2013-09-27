@@ -46,8 +46,7 @@ function validateBaseInformation(retVal, listing) {
         retVal['description'] = "A description is required.";
     }
     // if main_category is For Sale we need a price
-    if(listing.main_category == "For Sale" && (listing.price == null || parseInt(listing.price) <= 0)) {
-        console.log('here');
+    if(listing.main_category == "For Sale" && (listing.price == null || parseInt(listing.price) < 0)) {
         retVal['price'] = "A valid price is required.";
     }
     return retVal;
@@ -519,9 +518,9 @@ exports.updateListing = function(req, res) {
                         }
                     } else {
                         if(!res) {
-                            req.io.respond(  {}  , response.SUCCESS.code);
+                            req.io.respond(  listing  , response.SUCCESS.code);
                         } else {
-                            res.send( {} , response.SUCCESS.code);
+                            res.send( listing , response.SUCCESS.code);
                         }
                     }
                 });
