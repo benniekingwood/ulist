@@ -32,6 +32,10 @@ var ObjectId = db.ObjectId;
 var LIST_FETCH_SIZE = 100;
 var LIST_FETCH_SIZE_MAX = 100;
 
+// save types
+var saveTypeUpdate = "update";
+var saveTypeCreate = "create";
+
 /**
  * This function will validate the basic listing information.
  * @param retVal
@@ -278,11 +282,14 @@ function saveListingImages(listing) {
 /**
  * This function will use the geocoder to
  * reverse geocode the listing to retrieve the
- * listings latitude and longitude.
+ * listings latitude and longitude.  It will 
+ * then save the listing based on the save type.
+ * @param req
+ * @param res
  * @param listing
- * @returns {*}
+ * @param saveType
  */
-function retrieveListingLatLng(listing) {
+function saveWithLocationLatLng(req, res, listing, saveType) {
     if(listing.location != undefined) {
         var address = listing.location.street;
         address = address.concat(" ");
@@ -293,14 +300,85 @@ function retrieveListingLatLng(listing) {
         address = address.concat(listing.location.zip);
         geocoder.geocode(address, function ( err, data ) {
             if(err) {
-                console.log("{Listing#retrieveListingLatLng} Error attemping to find geocode: " + err);
+                console.log("{Listing#saveWithLocationLatLng} Error attemping to find geocode: " + err);
             } else if(data.status == 'OK') {
                 listing.location.latitude = data.results[0].geometry.location.lat;
                 listing.location.longitude = data.results[0].geometry.location.lng;
             }
+
+            if(saveType == saveTypeUpdate) {
+                // now we can update the listing finally in the db
+                update(req, res, listing);
+            } else if(saveType == saveTypeCreate) {
+                // create the new listing with the lat long
+                create(req, res, listing);
+            }
         });
-    }
-    return listing;
+    } 
+}
+
+/** 
+ * This function will perform the actual update in to the datasource.
+ * @param req
+ * @param res
+ * @param listing
+ */
+function update(req, res, listing) {
+     // now we can update the listing finally in the db
+    db.listings.update({_id: ObjectId(req.params.id)}, listing, function(err, result) {
+        if ( err ) {
+                console.log("{Listing#update} Error : " + err);
+                if(!res) {
+                    req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+                } else {
+                    res.send({error : response.SYSTEM_ERROR.response  }, response.SYSTEM_ERROR.code);
+                }
+        } else if(!result ) {
+            if(!res) {
+                req.io.respond( {error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+            } else {
+                res.send({error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+            }
+        } else {
+            if(!res) {
+                req.io.respond(  listing  , response.SUCCESS.code);
+            } else {
+                res.send( listing , response.SUCCESS.code);
+            }
+        }
+    });
+}
+
+/** 
+ * This function will perform the actual create in to the datasource.
+ * @param req
+ * @param res
+ * @param listing
+ */
+function create(req, res, listing) {
+    db.listings.save(listing, function(err, result) {
+         if ( err ) { console.log("{Listing#createListing} Error : " + err);
+            // TODO: remove any uploaded images if necessary
+            if(!res) {
+                req.io.respond( { error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
+            } else {
+                res.send({ error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
+            }
+        } else if(!result ) {
+             // TODO: remove any uploaded images if necessary
+            if(!res) {
+                req.io.respond( {error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
+            } else {
+                res.send({error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
+            }
+        } else {
+            if(!res) {
+                req.io.respond( result  , response.SUCCESS.code);
+            } else {
+                res.send( result , response.SUCCESS.code);
+            }
+        }
+    });
 }
 
 /**
@@ -404,9 +482,6 @@ exports.createListing = function(req, res) {
         // shorten the description for the short_description field.  limit to 40 chars.
         listing['short_description'] = (listing.description.length > 40) ? listing.description.substring(0,40) + "..." : listing.description;
 
-        // if location is present, attempt to determine lat long with reverse geo location
-        listing = retrieveListingLatLng(listing);
-
         // if there are images present, attempt to save them
         var result = saveListingImages(listing);
         listing = result.listing;
@@ -420,29 +495,14 @@ exports.createListing = function(req, res) {
                 res.send({error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
             }
         } else { // since it was a successful upload, we can then save to the db
-            db.listings.save(listing, function(err, result) {
-                 if ( err ) { console.log("{Listing#createListing} Error : " + err);
-                    // TODO: remove any uploaded images if necessary
-                    if(!res) {
-                        req.io.respond( { error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
-                    } else {
-                        res.send({ error : response.SYSTEM_ERROR.response }, response.SYSTEM_ERROR.code);
-                    }
-                } else if(!result ) {
-                     // TODO: remove any uploaded images if necessary
-                    if(!res) {
-                        req.io.respond( {error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
-                    } else {
-                        res.send({error : "There was a problem creating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
-                    }
-                } else {
-                    if(!res) {
-                        req.io.respond( result  , response.SUCCESS.code);
-                    } else {
-                        res.send( result , response.SUCCESS.code);
-                    }
-                }
-            });
+
+            // if the listing has a location, grab the lat long and save
+            if(listing.location != undefined) {
+                saveWithLocationLatLng(req, res, listing, saveTypeCreate);
+            } else {
+                // save the listing 
+                create(req, res, listing);
+            }
         }
     } else {
         if(!res) {
@@ -501,29 +561,14 @@ exports.updateListing = function(req, res) {
                     }
                 }
 
-                // now we can update the listing finally in the db
-                db.listings.update({_id: ObjectId(req.params.id)}, listing, function(err, result) {
-                    if ( err ) {
-                            console.log("{Listing#updateListing} Error : " + err);
-                            if(!res) {
-                                req.io.respond( {error : response.SYSTEM_ERROR.response } , response.SYSTEM_ERROR.code);
-                            } else {
-                                res.send({error : response.SYSTEM_ERROR.response  }, response.SYSTEM_ERROR.code);
-                            }
-                    } else if(!result ) {
-                        if(!res) {
-                            req.io.respond( {error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." } , response.SYSTEM_ERROR.code);
-                        } else {
-                            res.send({error : "There was a problem updating your listing.  Please try again later or contact help@theulink.com." }, response.SYSTEM_ERROR.code);
-                        }
-                    } else {
-                        if(!res) {
-                            req.io.respond(  listing  , response.SUCCESS.code);
-                        } else {
-                            res.send( listing , response.SUCCESS.code);
-                        }
-                    }
-                });
+                // shorten the description for the short_description field.  limit to 40 chars.
+                listing['short_description'] = (listing.description.length > 40) ? listing.description.substring(0,40) + "..." : listing.description;
+
+                if(listing.location != undefined) {
+                    saveWithLocationLatLng(req, res, listing, saveTypeUpdate);
+                } else {
+                    update(req, res, listing);
+                }
             } else {
                 if(!res) {
                     req.io.respond( {errors : errors } , response.VALIDATION_ERROR.code);
